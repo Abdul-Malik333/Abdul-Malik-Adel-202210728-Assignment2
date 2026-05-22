@@ -1,0 +1,77 @@
+-- ============================================================
+-- Q1: PL/SQL Anonymous Blocks
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- Original Block (Hello World)
+-- ------------------------------------------------------------
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Hello World');
+END;
+/
+
+
+-- ------------------------------------------------------------
+-- Q1 - Part 1 & 2:
+-- Added DECLARE section with TODAY and TOMORROW variables.
+-- TODAY is initialized with SYSDATE.
+-- TOMORROW uses %TYPE to match TODAY's datatype.
+-- TOMORROW is calculated by adding 1 to TODAY.
+-- Both dates are printed after 'Hello World'.
+-- ------------------------------------------------------------
+DECLARE
+    today    DATE := SYSDATE;          -- initialized directly with SYSDATE
+    tomorrow today%TYPE;               -- same datatype as TODAY using %TYPE
+BEGIN
+    tomorrow := today + 1;             -- add 1 day to get tomorrow's date
+
+    DBMS_OUTPUT.PUT_LINE('Hello World');
+    DBMS_OUTPUT.PUT_LINE('Today    : ' || TO_CHAR(today,    'DD-MON-YYYY'));
+    DBMS_OUTPUT.PUT_LINE('Tomorrow : ' || TO_CHAR(tomorrow, 'DD-MON-YYYY'));
+END;
+/
+
+
+-- ------------------------------------------------------------
+-- Q1 - Part 3:
+-- Stores today's date in my_date.
+-- Displays it in 'Month dd, yyyy' format (e.g. May 21, 2026).
+-- Calculates the last day of the current month using LAST_DAY()
+-- and stores it in v_last_day, then displays it.
+-- ------------------------------------------------------------
+DECLARE
+    my_date    DATE := SYSDATE;        -- today's date
+    v_last_day DATE;                   -- last day of the current month
+BEGIN
+    v_last_day := LAST_DAY(my_date);   -- built-in function returns last day of month
+
+    DBMS_OUTPUT.PUT_LINE('Today      : ' || TO_CHAR(my_date,    'Month dd, yyyy'));
+    DBMS_OUTPUT.PUT_LINE('Last Day   : ' || TO_CHAR(v_last_day, 'Month dd, yyyy'));
+END;
+/
+
+
+-- ------------------------------------------------------------
+-- Q1 - Part 4:
+-- Extends Part 3 by adding 45 days to today's date.
+-- Calculates the number of months between today and that
+-- future date using MONTHS_BETWEEN(), then displays the result.
+-- ------------------------------------------------------------
+DECLARE
+    my_date        DATE := SYSDATE;          -- today's date
+    v_last_day     DATE;                     -- last day of current month
+    v_future_date  DATE;                     -- today + 45 days
+    v_months_diff  NUMBER(10, 4);            -- months between the two dates
+BEGIN
+    v_last_day    := LAST_DAY(my_date);      -- last day of current month
+    v_future_date := my_date + 45;           -- add 45 days to today
+
+    -- MONTHS_BETWEEN returns a decimal number of months
+    v_months_diff := MONTHS_BETWEEN(v_future_date, my_date);
+
+    DBMS_OUTPUT.PUT_LINE('Today          : ' || TO_CHAR(my_date,       'Month dd, yyyy'));
+    DBMS_OUTPUT.PUT_LINE('Last Day       : ' || TO_CHAR(v_last_day,    'Month dd, yyyy'));
+    DBMS_OUTPUT.PUT_LINE('Future Date    : ' || TO_CHAR(v_future_date, 'Month dd, yyyy'));
+    DBMS_OUTPUT.PUT_LINE('Months Between : ' || v_months_diff);
+END;
+/
