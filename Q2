@@ -1,0 +1,144 @@
+-- ============================================================
+-- Q2: Countries Table + PL/SQL with %TYPE & Explicit Cursor
+-- ============================================================
+
+
+-- ------------------------------------------------------------
+-- Step 1: Create the COUNTRIES table
+-- ------------------------------------------------------------
+CREATE TABLE countries (
+    country_name  VARCHAR2(50),
+    median_age    NUMBER(6, 2)
+);
+
+
+-- ------------------------------------------------------------
+-- Step 2: Insert sample records into COUNTRIES
+-- ------------------------------------------------------------
+INSERT INTO countries (country_name, median_age) VALUES ('Japan',          48.7);
+INSERT INTO countries (country_name, median_age) VALUES ('Germany',        45.7);
+INSERT INTO countries (country_name, median_age) VALUES ('United States',  38.5);
+INSERT INTO countries (country_name, median_age) VALUES ('Brazil',         33.5);
+INSERT INTO countries (country_name, median_age) VALUES ('India',          28.2);
+INSERT INTO countries (country_name, median_age) VALUES ('Nigeria',        18.1);
+INSERT INTO countries (country_name, median_age) VALUES ('China',          38.4);
+INSERT INTO countries (country_name, median_age) VALUES ('France',         42.3);
+INSERT INTO countries (country_name, median_age) VALUES ('Australia',      37.9);
+INSERT INTO countries (country_name, median_age) VALUES ('Jordan',         23.6);
+
+COMMIT;
+
+
+-- ------------------------------------------------------------
+-- Step 3: Original PL/SQL block (for reference / evaluation)
+-- Variable types were hard-coded — we will improve this below.
+-- ------------------------------------------------------------
+-- DECLARE
+--     country_name VARCHAR2(50);
+--     median_age   NUMBER(6, 2);
+-- BEGIN
+--     SELECT country_name, median_age
+--     INTO   country_name, median_age
+--     FROM   countries
+--     WHERE  country_name = 'Japan';
+--
+--     DBMS_OUTPUT.PUT_LINE('The median age in ' || country_name ||
+--                          ' is ' || median_age || '.');
+-- END;
+-- /
+
+
+-- ------------------------------------------------------------
+-- Step 4: Improved block using %TYPE attribute
+-- country_name and median_age now reference the actual column
+-- types in the COUNTRIES table, so if the column definition
+-- ever changes the variable automatically adapts.
+-- This version still uses an implicit SELECT...INTO cursor.
+-- ------------------------------------------------------------
+DECLARE
+    -- %TYPE anchors the variable to the column's datatype
+    v_country_name  countries.country_name%TYPE;
+    v_median_age    countries.median_age%TYPE;
+BEGIN
+    SELECT country_name, median_age
+    INTO   v_country_name, v_median_age
+    FROM   countries
+    WHERE  country_name = 'Japan';
+
+    DBMS_OUTPUT.PUT_LINE('The median age in ' || v_country_name ||
+                         ' is ' || v_median_age || '.');
+END;
+/
+
+
+-- ------------------------------------------------------------
+-- Step 5: Rewritten using an EXPLICIT CURSOR
+-- An explicit cursor gives the developer full control:
+--   DECLARE  → define the cursor and its query
+--   OPEN     → execute the query and create the result set
+--   FETCH    → retrieve the next row into variables
+--   CLOSE    → release the cursor resources
+-- %TYPE is still used for variable declarations.
+-- ------------------------------------------------------------
+DECLARE
+    -- Explicit cursor definition
+    CURSOR c_country IS
+        SELECT country_name, median_age
+        FROM   countries
+        WHERE  country_name = 'Japan';
+
+    -- Variables anchored to the table columns using %TYPE
+    v_country_name  countries.country_name%TYPE;
+    v_median_age    countries.median_age%TYPE;
+
+BEGIN
+    OPEN  c_country;                              -- open / execute the cursor query
+
+    FETCH c_country INTO v_country_name, v_median_age;   -- fetch first (and only) row
+
+    IF c_country%FOUND THEN                       -- %FOUND is TRUE when a row was fetched
+        DBMS_OUTPUT.PUT_LINE('The median age in ' || v_country_name ||
+                             ' is ' || v_median_age || '.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Country not found.');
+    END IF;
+
+    CLOSE c_country;                              -- always close the cursor when done
+
+END;
+/
+
+
+-- ------------------------------------------------------------
+-- BONUS: Explicit cursor with a loop to print ALL countries
+-- Demonstrates the real power of explicit cursors — iterating
+-- over multiple rows returned by the query.
+-- ------------------------------------------------------------
+DECLARE
+    CURSOR c_all_countries IS
+        SELECT country_name, median_age
+        FROM   countries
+        ORDER  BY median_age DESC;              -- highest median age first
+
+    v_country_name  countries.country_name%TYPE;
+    v_median_age    countries.median_age%TYPE;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Median Age by Country ---');
+
+    OPEN c_all_countries;
+
+    LOOP
+        FETCH c_all_countries INTO v_country_name, v_median_age;
+        EXIT WHEN c_all_countries%NOTFOUND;     -- exit loop when no more rows
+
+        DBMS_OUTPUT.PUT_LINE(RPAD(v_country_name, 20) ||
+                             ' : ' || v_median_age);
+    END LOOP;
+
+    CLOSE c_all_countries;
+
+    DBMS_OUTPUT.PUT_LINE('--- Total rows: ' ||
+                          c_all_countries%ROWCOUNT || ' ---');
+END;
+/
